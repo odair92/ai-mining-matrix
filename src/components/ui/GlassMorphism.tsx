@@ -1,11 +1,11 @@
 
 import React from 'react';
 import { cn } from '@/lib/utils';
-import { motion, MotionProps } from 'framer-motion';
+import { motion, HTMLMotionProps } from 'framer-motion';
 
-interface GlassMorphismProps extends React.HTMLAttributes<HTMLDivElement>, MotionProps {
+// Use HTMLMotionProps directly as it already handles the correct types for motion.div
+interface GlassMorphismProps extends HTMLMotionProps<"div"> {
   children: React.ReactNode;
-  className?: string;
   intensity?: 'light' | 'medium' | 'heavy';
   animateOnHover?: boolean;
   dark?: boolean;

@@ -2,15 +2,21 @@
 import React from 'react';
 import { Button, ButtonProps } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { motion, MotionProps } from 'framer-motion';
+import { motion, MotionProps, HTMLMotionProps } from 'framer-motion';
 
-interface AnimatedButtonProps extends ButtonProps, MotionProps {
+// Create a separate type that omits conflicting properties
+type AnimatedButtonPropsBase = Omit<ButtonProps, keyof MotionProps>;
+
+interface AnimatedButtonProps extends AnimatedButtonPropsBase {
   children: React.ReactNode;
   className?: string;
   gradientBorder?: boolean;
   rippleEffect?: boolean;
   animateScale?: boolean;
   gradientColors?: string;
+  // Add motion props we want to use
+  whileHover?: MotionProps['whileHover'];
+  whileTap?: MotionProps['whileTap'];
 }
 
 const AnimatedButton = React.forwardRef<HTMLButtonElement, AnimatedButtonProps>(
@@ -22,6 +28,7 @@ const AnimatedButton = React.forwardRef<HTMLButtonElement, AnimatedButtonProps>(
     animateScale = true,
     gradientColors = 'from-primary/80 to-blue-400/80',
     whileHover,
+    whileTap,
     ...props 
   }, ref) => {
     return (
@@ -30,7 +37,7 @@ const AnimatedButton = React.forwardRef<HTMLButtonElement, AnimatedButtonProps>(
           'relative',
           gradientBorder && `p-[1px] bg-gradient-to-tr ${gradientColors} rounded-md`,
         )}
-        whileHover={animateScale ? { scale: 1.03, ...whileHover } : whileHover}
+        whileHover={animateScale ? { scale: 1.03, ...(whileHover as object) } : whileHover}
         whileTap={{ scale: 0.98 }}
       >
         <Button

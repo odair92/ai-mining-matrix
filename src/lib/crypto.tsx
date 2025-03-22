@@ -1,5 +1,5 @@
 
-import { Database, BarCode, Coins, Bitcoin, Landmark } from "lucide-react";
+import { Database, Barcode, Coins, Bitcoin, Landmark } from "lucide-react";
 import React from "react";
 
 export type CryptoCurrency = {
