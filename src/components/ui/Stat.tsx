@@ -14,6 +14,7 @@ interface StatProps {
   isLoading?: boolean;
   animated?: boolean;
   formatter?: (value: string | number) => string;
+  subtitle?: string;
 }
 
 const Stat = ({
@@ -26,6 +27,7 @@ const Stat = ({
   isLoading = false,
   animated = true,
   formatter = (val) => String(val),
+  subtitle,
 }: StatProps) => {
   // Format the value
   const formattedValue = formatter(value);
@@ -50,6 +52,10 @@ const Stat = ({
             >
               {formattedValue}
             </motion.p>
+          )}
+          
+          {subtitle && (
+            <p className="text-xs text-muted-foreground">{subtitle}</p>
           )}
           
           {change && (

@@ -10,6 +10,7 @@ interface AnimatedButtonProps extends ButtonProps, MotionProps {
   gradientBorder?: boolean;
   rippleEffect?: boolean;
   animateScale?: boolean;
+  gradientColors?: string;
 }
 
 const AnimatedButton = React.forwardRef<HTMLButtonElement, AnimatedButtonProps>(
@@ -19,6 +20,7 @@ const AnimatedButton = React.forwardRef<HTMLButtonElement, AnimatedButtonProps>(
     gradientBorder = false, 
     rippleEffect = false,
     animateScale = true,
+    gradientColors = 'from-primary/80 to-blue-400/80',
     whileHover,
     ...props 
   }, ref) => {
@@ -26,7 +28,7 @@ const AnimatedButton = React.forwardRef<HTMLButtonElement, AnimatedButtonProps>(
       <motion.div
         className={cn(
           'relative',
-          gradientBorder && 'p-[1px] bg-gradient-to-tr from-primary/80 to-blue-400/80 rounded-md',
+          gradientBorder && `p-[1px] bg-gradient-to-tr ${gradientColors} rounded-md`,
         )}
         whileHover={animateScale ? { scale: 1.03, ...whileHover } : whileHover}
         whileTap={{ scale: 0.98 }}
