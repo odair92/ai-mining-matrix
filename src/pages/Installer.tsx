@@ -1,7 +1,6 @@
-
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowRight, Check, Database, ShieldCheck, Server, UserPlus, Cpu } from 'lucide-react';
+import { ArrowRight, Check, Database, ShieldCheck, Server, UserPlus, Cpu, Globe } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -30,6 +29,12 @@ const steps = [
     icon: <Database className="h-6 w-6" />,
   },
   {
+    id: 'hosting',
+    title: 'Hosting',
+    description: 'Configure hosting environment settings.',
+    icon: <Globe className="h-6 w-6" />,
+  },
+  {
     id: 'system',
     title: 'System Settings',
     description: 'Configure mining capabilities and performance.',
@@ -49,6 +54,12 @@ const Installer = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const [adminUser, setAdminUser] = useState({ email: '', password: '', confirmPassword: '' });
   const [dbConfig, setDbConfig] = useState({ host: 'localhost', name: 'aimatrix', user: 'root', password: '' });
+  const [hostingConfig, setHostingConfig] = useState({
+    baseUrl: window.location.origin,
+    useHttps: window.location.protocol === 'https:',
+    apiPath: '/api',
+    assetsPath: '/assets',
+  });
   const [systemSettings, setSystemSettings] = useState({
     siteName: 'AI Mining Matrix',
     cryptoSupport: true,
@@ -64,6 +75,14 @@ const Installer = () => {
   const handleDbChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setDbConfig(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleHostingChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value, type, checked } = e.target;
+    setHostingConfig(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }));
   };
 
   const handleSystemChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -112,9 +131,14 @@ const Installer = () => {
 
     // Simulating installation process
     setTimeout(() => {
-      // Save admin password to localStorage
+      // Save installation configuration to localStorage
       localStorage.setItem('adminPassword', adminUser.password);
+      localStorage.setItem('adminEmail', adminUser.email);
+      localStorage.setItem('dbConfig', JSON.stringify(dbConfig));
+      localStorage.setItem('hostingConfig', JSON.stringify(hostingConfig));
+      localStorage.setItem('systemSettings', JSON.stringify(systemSettings));
       localStorage.setItem('systemInstalled', 'true');
+      localStorage.setItem('installationDate', new Date().toISOString());
       
       setIsInstalling(false);
       setCurrentStep(steps.length - 1);
@@ -337,8 +361,83 @@ const Installer = () => {
                   </div>
                 )}
 
-                {/* System settings step */}
+                {/* Hosting configuration step */}
                 {currentStep === 3 && (
+                  <div className="flex-1 flex flex-col">
+                    <h2 className="text-2xl font-bold mb-4">Hosting Configuration</h2>
+                    <p className="mb-6">
+                      Configure hosting environment settings for your application.
+                    </p>
+                    
+                    <div className="space-y-4 mb-6">
+                      <div>
+                        <Label htmlFor="baseUrl">Base URL</Label>
+                        <Input
+                          id="baseUrl"
+                          name="baseUrl"
+                          value={hostingConfig.baseUrl}
+                          onChange={handleHostingChange}
+                          placeholder="https://yourdomain.com"
+                        />
+                        <p className="text-xs text-muted-foreground mt-1">
+                          The root URL where your application is hosted
+                        </p>
+                      </div>
+                      
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          id="useHttps"
+                          name="useHttps"
+                          checked={hostingConfig.useHttps}
+                          onChange={handleHostingChange}
+                          className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                        />
+                        <Label htmlFor="useHttps" className="cursor-pointer">Use HTTPS</Label>
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="apiPath">API Path</Label>
+                        <Input
+                          id="apiPath"
+                          name="apiPath"
+                          value={hostingConfig.apiPath}
+                          onChange={handleHostingChange}
+                          placeholder="/api"
+                        />
+                        <p className="text-xs text-muted-foreground mt-1">
+                          The path to API endpoints
+                        </p>
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="assetsPath">Assets Path</Label>
+                        <Input
+                          id="assetsPath"
+                          name="assetsPath"
+                          value={hostingConfig.assetsPath}
+                          onChange={handleHostingChange}
+                          placeholder="/assets"
+                        />
+                        <p className="text-xs text-muted-foreground mt-1">
+                          The path to static assets
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="mt-auto flex justify-between">
+                      <Button variant="outline" onClick={prevStep}>
+                        Back
+                      </Button>
+                      <Button onClick={nextStep}>
+                        Next <ArrowRight className="ml-2 h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {/* System settings step */}
+                {currentStep === 4 && (
                   <div className="flex-1 flex flex-col">
                     <h2 className="text-2xl font-bold mb-4">System Configuration</h2>
                     <p className="mb-6">
@@ -393,7 +492,7 @@ const Installer = () => {
                 )}
 
                 {/* Completion step */}
-                {currentStep === 4 && (
+                {currentStep === 5 && (
                   <div className="flex-1 flex flex-col items-center justify-center text-center">
                     <div className="bg-primary/10 p-4 rounded-full mb-6">
                       <Check className="h-10 w-10 text-primary" />

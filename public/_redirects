@@ -1,0 +1,5 @@
+
+# Netlify configuration for SPA
+# This file enables client-side routing for Netlify hosting
+
+/*    /index.html   200
