@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ShieldCheck, Users, Wallet, BarChart3, Settings, UserCheck } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -12,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { cryptocurrencies } from '@/lib/crypto';
+import AdminLogin from '@/components/admin/AdminLogin';
 
 const mockUsers = [
   { id: 1, name: 'John Doe', email: 'john@example.com', balance: '$1,250.00', planType: 'Professional', status: 'Active' },
@@ -32,6 +32,14 @@ const mockTransactions = [
 const AdminDashboard = () => {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  
+  useEffect(() => {
+    const adminAuth = localStorage.getItem('adminAuthenticated');
+    if (adminAuth === 'true') {
+      setIsAuthenticated(true);
+    }
+  }, []);
 
   const handleApproveTransaction = (id: number) => {
     toast({
@@ -54,6 +62,10 @@ const AdminDashboard = () => {
     });
   };
 
+  const handleLoginSuccess = () => {
+    setIsAuthenticated(true);
+  };
+
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -71,6 +83,16 @@ const AdminDashboard = () => {
       opacity: 1
     }
   };
+
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen flex flex-col bg-gradient-to-br from-background to-secondary/20">
+        <Header />
+        <AdminLogin onLoginSuccess={handleLoginSuccess} />
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-background to-secondary/20">
@@ -127,6 +149,22 @@ const AdminDashboard = () => {
                 >
                   <Settings className="mr-2 h-4 w-4" />
                   Settings
+                </Button>
+                
+                <Button 
+                  variant="destructive"
+                  className="w-full justify-start mt-6" 
+                  onClick={() => {
+                    localStorage.removeItem('adminAuthenticated');
+                    setIsAuthenticated(false);
+                    toast({
+                      title: "Logged out",
+                      description: "You have been logged out of the admin panel.",
+                    });
+                  }}
+                >
+                  <ShieldCheck className="mr-2 h-4 w-4" />
+                  Logout
                 </Button>
               </nav>
             </GlassMorphism>
