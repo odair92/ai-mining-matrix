@@ -2,6 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Check } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 interface CompleteStepProps {
   language: 'en' | 'pt';
@@ -28,9 +29,17 @@ const CompleteStep: React.FC<CompleteStepProps> = ({ language, onFinish }) => {
           : 'Agora você pode fazer login no seu painel de administração com as credenciais que forneceu durante a configuração.'}
       </p>
       
-      <Button onClick={onFinish} className="px-8">
-        {language === 'en' ? 'Go to Homepage' : 'Ir para Página Inicial'}
-      </Button>
+      <div className="flex flex-col space-y-4 w-full max-w-xs">
+        <Button onClick={onFinish} className="px-8">
+          {language === 'en' ? 'Go to Homepage' : 'Ir para Página Inicial'}
+        </Button>
+        
+        <Link to="/admin">
+          <Button variant="outline" className="px-8 w-full">
+            {language === 'en' ? 'Go to Admin Panel' : 'Ir para Painel de Administração'}
+          </Button>
+        </Link>
+      </div>
     </div>
   );
 };

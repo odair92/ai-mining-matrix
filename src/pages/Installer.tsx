@@ -39,7 +39,7 @@ const Installer = () => {
   });
   const [isInstalling, setIsInstalling] = useState(false);
   const [showHostingerGuide, setShowHostingerGuide] = useState(false);
-  const [language, setLanguage] = useState<'en' | 'pt'>('en');
+  const [language, setLanguage] = useState<'en' | 'pt'>('pt'); // Definido como português por padrão
 
   const handleAdminChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -71,8 +71,8 @@ const Installer = () => {
     if (currentStep === 1) {
       if (!adminUser.email || !adminUser.password) {
         toast({
-          title: "Missing information",
-          description: "Please fill out all required fields.",
+          title: language === 'en' ? "Missing information" : "Informações faltando",
+          description: language === 'en' ? "Please fill out all required fields." : "Por favor, preencha todos os campos obrigatórios.",
           variant: "destructive",
         });
         return;
@@ -80,8 +80,8 @@ const Installer = () => {
 
       if (adminUser.password !== adminUser.confirmPassword) {
         toast({
-          title: "Password mismatch",
-          description: "The passwords you entered do not match.",
+          title: language === 'en' ? "Password mismatch" : "As senhas não correspondem",
+          description: language === 'en' ? "The passwords you entered do not match." : "As senhas que você digitou não coincidem.",
           variant: "destructive",
         });
         return;
@@ -118,10 +118,12 @@ const Installer = () => {
 
   const finishInstallation = () => {
     toast({
-      title: "Installation complete!",
-      description: "Your AI Mining Matrix has been successfully set up.",
+      title: language === 'en' ? "Installation complete!" : "Instalação concluída!",
+      description: language === 'en' 
+        ? "Your AI Mining Matrix has been successfully set up." 
+        : "Sua plataforma AI Mining Matrix foi configurada com sucesso.",
     });
-    navigate('/');
+    navigate('/admin');
   };
 
   const toggleLanguage = () => {

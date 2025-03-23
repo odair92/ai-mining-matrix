@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import GlassMorphism from '@/components/ui/GlassMorphism';
+import { useNavigate } from 'react-router-dom';
 
 interface AdminLoginProps {
   onLoginSuccess: () => void;
@@ -13,6 +14,7 @@ interface AdminLoginProps {
 
 const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess }) => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -21,25 +23,24 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess }) => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Simulate loading for better UX
+    // Get stored admin credentials
+    const storedPassword = localStorage.getItem('adminPassword') || 'admin123';
+    
     setTimeout(() => {
-      // Default admin password - in a real app, this would be securely stored
-      const adminPassword = 'admin123'; 
-      
-      if (password === adminPassword) {
+      if (password === storedPassword) {
         // Store auth state in localStorage
         localStorage.setItem('adminAuthenticated', 'true');
         
         toast({
-          title: "Login successful",
-          description: "Welcome to the admin dashboard.",
+          title: "Login bem-sucedido",
+          description: "Bem-vindo ao painel de administração.",
         });
         
         onLoginSuccess();
       } else {
         toast({
-          title: "Authentication failed",
-          description: "The password you entered is incorrect.",
+          title: "Falha na autenticação",
+          description: "A senha que você inseriu está incorreta.",
           variant: "destructive",
         });
       }
@@ -65,7 +66,7 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess }) => {
             </div>
           </div>
           
-          <h1 className="text-2xl font-bold text-center mb-6">Admin Access</h1>
+          <h1 className="text-2xl font-bold text-center mb-6">Acesso de Administrador</h1>
           
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="relative">
@@ -73,7 +74,7 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess }) => {
                 type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter admin password"
+                placeholder="Digite a senha de administrador"
                 className="pr-10"
                 required
               />
@@ -87,7 +88,7 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess }) => {
             </div>
             
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Authenticating..." : "Login to Admin Panel"}
+              {isLoading ? "Autenticando..." : "Entrar no Painel de Admin"}
             </Button>
           </form>
         </GlassMorphism>

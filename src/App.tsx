@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { useState, useEffect } from "react";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
@@ -13,17 +14,21 @@ import Plans from "./pages/Plans";
 import Admin from "./pages/Admin";
 import Installer from "./pages/Installer";
 import NotFound from "./pages/NotFound";
-import { useEffect, useState } from "react";
 
 const queryClient = new QueryClient();
 
 const App = () => {
   const [isInstalled, setIsInstalled] = useState<boolean | null>(null);
+  const [isAdminAuth, setIsAdminAuth] = useState<boolean>(false);
 
   useEffect(() => {
     // Check if system is installed
     const systemInstalled = localStorage.getItem('systemInstalled');
     setIsInstalled(systemInstalled === 'true');
+    
+    // Check if admin is authenticated
+    const adminAuthenticated = localStorage.getItem('adminAuthenticated');
+    setIsAdminAuth(adminAuthenticated === 'true');
   }, []);
 
   // Wait until we know if the system is installed
