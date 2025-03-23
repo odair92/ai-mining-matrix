@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { cryptocurrencies } from '@/lib/crypto';
 import AdminLogin from '@/components/admin/AdminLogin';
+import { useNavigate } from 'react-router-dom';
 
 const mockUsers = [
   { id: 1, name: 'John Doe', email: 'john@example.com', balance: '$1,250.00', planType: 'Professional', status: 'Active' },
@@ -31,39 +32,62 @@ const mockTransactions = [
 
 const AdminDashboard = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('dashboard');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
-    const adminAuth = localStorage.getItem('adminAuthenticated');
-    if (adminAuth === 'true') {
-      setIsAuthenticated(true);
-    }
+    const checkAuthentication = () => {
+      const adminAuth = localStorage.getItem('adminAuthenticated');
+      const adminAuthTime = localStorage.getItem('adminAuthTime');
+      
+      if (adminAuth === 'true' && adminAuthTime) {
+        const authTimeMs = parseInt(adminAuthTime, 10);
+        const currentTime = Date.now();
+        const oneDayMs = 24 * 60 * 60 * 1000;
+        
+        if (!isNaN(authTimeMs) && (currentTime - authTimeMs) < oneDayMs) {
+          setIsAuthenticated(true);
+        } else {
+          localStorage.removeItem('adminAuthenticated');
+          localStorage.removeItem('adminAuthTime');
+          setIsAuthenticated(false);
+        }
+      } else {
+        setIsAuthenticated(false);
+      }
+      
+      setIsLoading(false);
+    };
+    
+    checkAuthentication();
+    
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'adminAuthenticated' || e.key === 'adminAuthTime') {
+        checkAuthentication();
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
   }, []);
-
-  const handleApproveTransaction = (id: number) => {
-    toast({
-      title: "Transaction Approved",
-      description: `Transaction #${id} has been approved successfully.`,
-    });
-  };
-
-  const handleRejectTransaction = (id: number) => {
-    toast({
-      title: "Transaction Rejected",
-      description: `Transaction #${id} has been rejected.`,
-    });
-  };
-
-  const handleUserAction = (id: number, action: string) => {
-    toast({
-      title: `User ${action}`,
-      description: `User #${id} has been ${action.toLowerCase()}.`,
-    });
-  };
 
   const handleLoginSuccess = () => {
     setIsAuthenticated(true);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('adminAuthenticated');
+    localStorage.removeItem('adminAuthTime');
+    setIsAuthenticated(false);
+    toast({
+      title: "Desconectado",
+      description: "Você foi desconectado do painel de administração.",
+    });
+    navigate('/');
   };
 
   const containerVariants = {
@@ -83,6 +107,18 @@ const AdminDashboard = () => {
       opacity: 1
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex flex-col bg-gradient-to-br from-background to-secondary/20">
+        <Header />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="animate-pulse text-xl">Carregando...</div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
 
   if (!isAuthenticated) {
     return (
@@ -154,14 +190,7 @@ const AdminDashboard = () => {
                 <Button 
                   variant="destructive"
                   className="w-full justify-start mt-6" 
-                  onClick={() => {
-                    localStorage.removeItem('adminAuthenticated');
-                    setIsAuthenticated(false);
-                    toast({
-                      title: "Logged out",
-                      description: "You have been logged out of the admin panel.",
-                    });
-                  }}
+                  onClick={handleLogout}
                 >
                   <ShieldCheck className="mr-2 h-4 w-4" />
                   Logout

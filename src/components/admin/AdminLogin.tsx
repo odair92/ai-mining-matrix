@@ -23,13 +23,24 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess }) => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Get stored admin credentials
-    const storedPassword = localStorage.getItem('adminPassword') || 'admin123';
+    // Get stored admin credentials from installation
+    const storedPassword = localStorage.getItem('adminPassword');
+    
+    if (!storedPassword) {
+      toast({
+        title: "Erro de autenticação",
+        description: "Credenciais de administrador não encontradas. Complete a instalação primeiro.",
+        variant: "destructive",
+      });
+      setIsLoading(false);
+      return;
+    }
     
     setTimeout(() => {
       if (password === storedPassword) {
-        // Store auth state in localStorage
+        // Store auth state in localStorage with timestamp
         localStorage.setItem('adminAuthenticated', 'true');
+        localStorage.setItem('adminAuthTime', Date.now().toString());
         
         toast({
           title: "Login bem-sucedido",
@@ -37,6 +48,7 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess }) => {
         });
         
         onLoginSuccess();
+        navigate('/admin');
       } else {
         toast({
           title: "Falha na autenticação",

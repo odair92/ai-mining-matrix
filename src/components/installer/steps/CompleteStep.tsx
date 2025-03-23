@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Check } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 interface CompleteStepProps {
   language: 'en' | 'pt';
@@ -10,6 +10,15 @@ interface CompleteStepProps {
 }
 
 const CompleteStep: React.FC<CompleteStepProps> = ({ language, onFinish }) => {
+  const navigate = useNavigate();
+  
+  const handleGoToAdmin = () => {
+    // Authenticate admin session before redirecting
+    localStorage.setItem('adminAuthenticated', 'true');
+    localStorage.setItem('adminAuthTime', Date.now().toString());
+    navigate('/admin');
+  };
+  
   return (
     <div className="flex-1 flex flex-col items-center justify-center text-center">
       <div className="bg-primary/10 p-4 rounded-full mb-6">
@@ -34,11 +43,9 @@ const CompleteStep: React.FC<CompleteStepProps> = ({ language, onFinish }) => {
           {language === 'en' ? 'Go to Homepage' : 'Ir para Página Inicial'}
         </Button>
         
-        <Link to="/admin">
-          <Button variant="outline" className="px-8 w-full">
-            {language === 'en' ? 'Go to Admin Panel' : 'Ir para Painel de Administração'}
-          </Button>
-        </Link>
+        <Button onClick={handleGoToAdmin} variant="outline" className="px-8 w-full">
+          {language === 'en' ? 'Go to Admin Panel' : 'Ir para Painel de Administração'}
+        </Button>
       </div>
     </div>
   );

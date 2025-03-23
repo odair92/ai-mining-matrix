@@ -28,7 +28,38 @@ const App = () => {
     
     // Check if admin is authenticated
     const adminAuthenticated = localStorage.getItem('adminAuthenticated');
-    setIsAdminAuth(adminAuthenticated === 'true');
+    const adminAuthTime = localStorage.getItem('adminAuthTime');
+    
+    // Validate admin authentication with time check (24 hour session)
+    if (adminAuthenticated === 'true' && adminAuthTime) {
+      const authTimeMs = parseInt(adminAuthTime, 10);
+      const currentTime = Date.now();
+      const oneDayMs = 24 * 60 * 60 * 1000;
+      
+      if (!isNaN(authTimeMs) && (currentTime - authTimeMs) < oneDayMs) {
+        setIsAdminAuth(true);
+      } else {
+        // Clear expired auth
+        localStorage.removeItem('adminAuthenticated');
+        localStorage.removeItem('adminAuthTime');
+      }
+    } else {
+      setIsAdminAuth(false);
+    }
+  }, []);
+
+  // Listen for storage changes in other tabs/windows
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'adminAuthenticated' || e.key === 'systemInstalled' || e.key === 'adminAuthTime') {
+        window.location.reload();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
   }, []);
 
   // Wait until we know if the system is installed

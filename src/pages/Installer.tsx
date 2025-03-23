@@ -39,7 +39,7 @@ const Installer = () => {
   });
   const [isInstalling, setIsInstalling] = useState(false);
   const [showHostingerGuide, setShowHostingerGuide] = useState(false);
-  const [language, setLanguage] = useState<'en' | 'pt'>('pt'); // Definido como português por padrão
+  const [language, setLanguage] = useState<'en' | 'pt'>('pt'); // Default to Portuguese
 
   const handleAdminChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -102,21 +102,61 @@ const Installer = () => {
   const completeInstallation = () => {
     setIsInstalling(true);
 
-    setTimeout(() => {
-      localStorage.setItem('adminPassword', adminUser.password);
-      localStorage.setItem('adminEmail', adminUser.email);
-      localStorage.setItem('dbConfig', JSON.stringify(dbConfig));
-      localStorage.setItem('hostingConfig', JSON.stringify(hostingConfig));
-      localStorage.setItem('systemSettings', JSON.stringify(systemSettings));
-      localStorage.setItem('systemInstalled', 'true');
-      localStorage.setItem('installationDate', new Date().toISOString());
-      
+    // Validate admin credentials one more time
+    if (!adminUser.email || !adminUser.password) {
+      toast({
+        title: language === 'en' ? "Missing admin credentials" : "Credenciais de administrador ausentes",
+        description: language === 'en' 
+          ? "Admin email and password are required to complete installation." 
+          : "Email e senha de administrador são necessários para concluir a instalação.",
+        variant: "destructive",
+      });
       setIsInstalling(false);
-      setCurrentStep(installationSteps.length - 1);
+      return;
+    }
+
+    setTimeout(() => {
+      try {
+        // Properly save all configuration to localStorage
+        localStorage.setItem('adminEmail', adminUser.email);
+        localStorage.setItem('adminPassword', adminUser.password);
+        localStorage.setItem('dbConfig', JSON.stringify(dbConfig));
+        localStorage.setItem('hostingConfig', JSON.stringify(hostingConfig));
+        localStorage.setItem('systemSettings', JSON.stringify(systemSettings));
+        localStorage.setItem('systemInstalled', 'true');
+        localStorage.setItem('installationDate', new Date().toISOString());
+        
+        // Set initial admin auth timestamp
+        localStorage.setItem('adminAuthTime', Date.now().toString());
+        
+        setIsInstalling(false);
+        setCurrentStep(installationSteps.length - 1);
+        
+        toast({
+          title: language === 'en' ? "Installation successful" : "Instalação bem-sucedida",
+          description: language === 'en' 
+            ? "Your AI Mining Matrix has been set up successfully." 
+            : "Sua plataforma AI Mining Matrix foi configurada com sucesso.",
+        });
+      } catch (error) {
+        console.error("Installation error:", error);
+        toast({
+          title: language === 'en' ? "Installation error" : "Erro na instalação",
+          description: language === 'en' 
+            ? "There was an error saving your configuration." 
+            : "Houve um erro ao salvar sua configuração.",
+          variant: "destructive",
+        });
+        setIsInstalling(false);
+      }
     }, 2000);
   };
 
   const finishInstallation = () => {
+    // Automatically authenticate admin when finishing installation
+    localStorage.setItem('adminAuthenticated', 'true');
+    localStorage.setItem('adminAuthTime', Date.now().toString());
+    
     toast({
       title: language === 'en' ? "Installation complete!" : "Instalação concluída!",
       description: language === 'en' 
