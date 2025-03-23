@@ -1,4 +1,5 @@
 
+import React from 'react';
 import { Server, ShieldCheck, Database, Globe, Cpu, Check } from 'lucide-react';
 import { Step } from './StepNavigation';
 
