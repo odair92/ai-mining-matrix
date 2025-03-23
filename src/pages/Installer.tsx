@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowRight, Check, Database, ShieldCheck, Server, Cpu, Globe, FileText } from 'lucide-react';
+import { ArrowRight, Check, Database, ShieldCheck, Server, Cpu, Globe, FileText, Languages } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -9,6 +9,7 @@ import GlassMorphism from '@/components/ui/GlassMorphism';
 import { useNavigate } from 'react-router-dom';
 import Footer from '@/components/layout/Footer';
 import HostingerGuide from '@/components/installer/HostingerGuide';
+import HostingerGuidePortugues from '@/components/installer/HostingerGuidePortugues';
 
 const steps = [
   {
@@ -68,6 +69,7 @@ const Installer = () => {
   });
   const [isInstalling, setIsInstalling] = useState(false);
   const [showHostingerGuide, setShowHostingerGuide] = useState(false);
+  const [language, setLanguage] = useState<'en' | 'pt'>('en');
 
   const handleAdminChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -152,26 +154,48 @@ const Installer = () => {
     navigate('/');
   };
 
+  const toggleLanguage = () => {
+    setLanguage(prev => prev === 'en' ? 'pt' : 'en');
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-background to-secondary/20">
       <div className="container mx-auto px-4 py-8 flex-1 flex flex-col">
         <header className="text-center mb-10">
-          <h1 className="text-3xl font-bold mb-2">AI Mining Matrix Installer</h1>
-          <p className="text-muted-foreground">Setup your AI-powered mining platform in minutes</p>
-          <div className="mt-4">
+          <h1 className="text-3xl font-bold mb-2">
+            {language === 'en' ? 'AI Mining Matrix Installer' : 'Instalador AI Mining Matrix'}
+          </h1>
+          <p className="text-muted-foreground">
+            {language === 'en' 
+              ? 'Setup your AI-powered mining platform in minutes' 
+              : 'Configure sua plataforma de mineração com IA em minutos'}
+          </p>
+          <div className="mt-4 flex flex-wrap justify-center gap-2">
             <Button 
               variant="outline" 
               onClick={() => setShowHostingerGuide(true)}
               className="flex items-center gap-2"
             >
               <FileText className="h-4 w-4" />
-              Hostinger Installation Guide
+              {language === 'en' ? 'Hostinger Installation Guide' : 'Guia de Instalação Hostinger'}
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={toggleLanguage}
+              className="flex items-center gap-2"
+            >
+              <Languages className="h-4 w-4" />
+              {language === 'en' ? 'Português' : 'English'}
             </Button>
           </div>
         </header>
 
         {showHostingerGuide ? (
-          <HostingerGuide onClose={() => setShowHostingerGuide(false)} />
+          language === 'en' ? (
+            <HostingerGuide onClose={() => setShowHostingerGuide(false)} />
+          ) : (
+            <HostingerGuidePortugues onClose={() => setShowHostingerGuide(false)} />
+          )
         ) : (
           <div className="flex flex-col md:flex-row gap-8 flex-1">
             <div className="md:w-64 shrink-0">
@@ -199,9 +223,25 @@ const Installer = () => {
                       </div>
                       <div>
                         <p className={`font-medium ${currentStep === index ? 'text-primary' : ''}`}>
-                          {step.title}
+                          {language === 'en' ? step.title : 
+                            step.id === 'welcome' ? 'Bem-vindo' :
+                            step.id === 'admin' ? 'Config. Admin' :
+                            step.id === 'database' ? 'Banco de Dados' :
+                            step.id === 'hosting' ? 'Hospedagem' :
+                            step.id === 'system' ? 'Configurações' :
+                            step.id === 'complete' ? 'Concluído' : step.title
+                          }
                         </p>
-                        <p className="text-xs hidden md:block">{step.description}</p>
+                        <p className="text-xs hidden md:block">
+                          {language === 'en' ? step.description : 
+                            step.id === 'welcome' ? 'Instale e configure o AI Mining Matrix no seu servidor.' :
+                            step.id === 'admin' ? 'Crie sua conta de administrador.' :
+                            step.id === 'database' ? 'Configure o banco de dados do sistema.' :
+                            step.id === 'hosting' ? 'Configure as definições do ambiente de hospedagem.' :
+                            step.id === 'system' ? 'Configure recursos de mineração e desempenho.' :
+                            step.id === 'complete' ? 'Seu sistema está pronto para usar.' : step.description
+                          }
+                        </p>
                       </div>
                     </div>
                   ))}
@@ -221,24 +261,32 @@ const Installer = () => {
                 >
                   {currentStep === 0 && (
                     <div className="flex-1 flex flex-col">
-                      <h2 className="text-2xl font-bold mb-4">Welcome to AI Mining Matrix</h2>
+                      <h2 className="text-2xl font-bold mb-4">
+                        {language === 'en' ? 'Welcome to AI Mining Matrix' : 'Bem-vindo ao AI Mining Matrix'}
+                      </h2>
                       <p className="mb-4">
-                        This installer will guide you through the process of setting up your AI Mining Matrix application.
+                        {language === 'en' 
+                          ? 'This installer will guide you through the process of setting up your AI Mining Matrix application.'
+                          : 'Este instalador irá guiá-lo através do processo de configuração da sua aplicação AI Mining Matrix.'}
                       </p>
                       <p className="mb-4">
-                        Before you begin, please make sure you have:
+                        {language === 'en'
+                          ? 'Before you begin, please make sure you have:'
+                          : 'Antes de começar, certifique-se de que você tem:'}
                       </p>
                       <ul className="list-disc list-inside space-y-2 mb-6">
-                        <li>A modern web browser</li>
-                        <li>Administrator access to your server</li>
-                        <li>Database credentials (if using an external database)</li>
+                        <li>{language === 'en' ? 'A modern web browser' : 'Um navegador web moderno'}</li>
+                        <li>{language === 'en' ? 'Administrator access to your server' : 'Acesso de administrador ao seu servidor'}</li>
+                        <li>{language === 'en' ? 'Database credentials (if using an external database)' : 'Credenciais do banco de dados (se estiver usando um banco de dados externo)'}</li>
                       </ul>
                       <p className="text-muted-foreground">
-                        Click "Next" to start the installation process.
+                        {language === 'en'
+                          ? 'Click "Next" to start the installation process.'
+                          : 'Clique em "Próximo" para iniciar o processo de instalação.'}
                       </p>
                       <div className="mt-auto flex justify-end">
                         <Button onClick={nextStep}>
-                          Next <ArrowRight className="ml-2 h-4 w-4" />
+                          {language === 'en' ? 'Next' : 'Próximo'} <ArrowRight className="ml-2 h-4 w-4" />
                         </Button>
                       </div>
                     </div>
@@ -246,47 +294,51 @@ const Installer = () => {
 
                   {currentStep === 1 && (
                     <div className="flex-1 flex flex-col">
-                      <h2 className="text-2xl font-bold mb-4">Create Admin Account</h2>
+                      <h2 className="text-2xl font-bold mb-4">
+                        {language === 'en' ? 'Create Admin Account' : 'Criar Conta de Administrador'}
+                      </h2>
                       <p className="mb-6">
-                        Create your administrator account to manage the platform.
+                        {language === 'en'
+                          ? 'Create your administrator account to manage the platform.'
+                          : 'Crie sua conta de administrador para gerenciar a plataforma.'}
                       </p>
                       
                       <div className="space-y-4 mb-6">
                         <div>
-                          <Label htmlFor="email">Email Address</Label>
+                          <Label htmlFor="email">{language === 'en' ? 'Email Address' : 'Endereço de Email'}</Label>
                           <Input
                             id="email"
                             name="email"
                             type="email"
                             value={adminUser.email}
                             onChange={handleAdminChange}
-                            placeholder="admin@example.com"
+                            placeholder={language === 'en' ? "admin@example.com" : "admin@exemplo.com"}
                             required
                           />
                         </div>
                         
                         <div>
-                          <Label htmlFor="password">Admin Password</Label>
+                          <Label htmlFor="password">{language === 'en' ? 'Admin Password' : 'Senha de Administrador'}</Label>
                           <Input
                             id="password"
                             name="password"
                             type="password"
                             value={adminUser.password}
                             onChange={handleAdminChange}
-                            placeholder="Enter a secure password"
+                            placeholder={language === 'en' ? "Enter a secure password" : "Digite uma senha segura"}
                             required
                           />
                         </div>
                         
                         <div>
-                          <Label htmlFor="confirmPassword">Confirm Password</Label>
+                          <Label htmlFor="confirmPassword">{language === 'en' ? 'Confirm Password' : 'Confirmar Senha'}</Label>
                           <Input
                             id="confirmPassword"
                             name="confirmPassword"
                             type="password"
                             value={adminUser.confirmPassword}
                             onChange={handleAdminChange}
-                            placeholder="Confirm your password"
+                            placeholder={language === 'en' ? "Confirm your password" : "Confirme sua senha"}
                             required
                           />
                         </div>
@@ -294,10 +346,10 @@ const Installer = () => {
                       
                       <div className="mt-auto flex justify-between">
                         <Button variant="outline" onClick={prevStep}>
-                          Back
+                          {language === 'en' ? 'Back' : 'Voltar'}
                         </Button>
                         <Button onClick={nextStep}>
-                          Next <ArrowRight className="ml-2 h-4 w-4" />
+                          {language === 'en' ? 'Next' : 'Próximo'} <ArrowRight className="ml-2 h-4 w-4" />
                         </Button>
                       </div>
                     </div>
@@ -305,14 +357,18 @@ const Installer = () => {
 
                   {currentStep === 2 && (
                     <div className="flex-1 flex flex-col">
-                      <h2 className="text-2xl font-bold mb-4">Database Configuration</h2>
+                      <h2 className="text-2xl font-bold mb-4">
+                        {language === 'en' ? 'Database Configuration' : 'Configuração do Banco de Dados'}
+                      </h2>
                       <p className="mb-6">
-                        Configure the database settings for your application.
+                        {language === 'en'
+                          ? 'Configure the database settings for your application.'
+                          : 'Configure as configurações do banco de dados para sua aplicação.'}
                       </p>
                       
                       <div className="space-y-4 mb-6">
                         <div>
-                          <Label htmlFor="host">Database Host</Label>
+                          <Label htmlFor="host">{language === 'en' ? 'Database Host' : 'Host do Banco de Dados'}</Label>
                           <Input
                             id="host"
                             name="host"
@@ -323,7 +379,7 @@ const Installer = () => {
                         </div>
                         
                         <div>
-                          <Label htmlFor="name">Database Name</Label>
+                          <Label htmlFor="name">{language === 'en' ? 'Database Name' : 'Nome do Banco de Dados'}</Label>
                           <Input
                             id="name"
                             name="name"
@@ -334,7 +390,7 @@ const Installer = () => {
                         </div>
                         
                         <div>
-                          <Label htmlFor="user">Database User</Label>
+                          <Label htmlFor="user">{language === 'en' ? 'Database User' : 'Usuário do Banco de Dados'}</Label>
                           <Input
                             id="user"
                             name="user"
@@ -345,24 +401,24 @@ const Installer = () => {
                         </div>
                         
                         <div>
-                          <Label htmlFor="dbPassword">Database Password</Label>
+                          <Label htmlFor="dbPassword">{language === 'en' ? 'Database Password' : 'Senha do Banco de Dados'}</Label>
                           <Input
                             id="dbPassword"
                             name="password"
                             type="password"
                             value={dbConfig.password}
                             onChange={handleDbChange}
-                            placeholder="Enter database password"
+                            placeholder={language === 'en' ? "Enter database password" : "Digite a senha do banco de dados"}
                           />
                         </div>
                       </div>
                       
                       <div className="mt-auto flex justify-between">
                         <Button variant="outline" onClick={prevStep}>
-                          Back
+                          {language === 'en' ? 'Back' : 'Voltar'}
                         </Button>
                         <Button onClick={nextStep}>
-                          Next <ArrowRight className="ml-2 h-4 w-4" />
+                          {language === 'en' ? 'Next' : 'Próximo'} <ArrowRight className="ml-2 h-4 w-4" />
                         </Button>
                       </div>
                     </div>
@@ -370,23 +426,29 @@ const Installer = () => {
 
                   {currentStep === 3 && (
                     <div className="flex-1 flex flex-col">
-                      <h2 className="text-2xl font-bold mb-4">Hosting Configuration</h2>
+                      <h2 className="text-2xl font-bold mb-4">
+                        {language === 'en' ? 'Hosting Configuration' : 'Configuração de Hospedagem'}
+                      </h2>
                       <p className="mb-6">
-                        Configure hosting environment settings for your application.
+                        {language === 'en'
+                          ? 'Configure hosting environment settings for your application.'
+                          : 'Configure as definições do ambiente de hospedagem para sua aplicação.'}
                       </p>
                       
                       <div className="space-y-4 mb-6">
                         <div>
-                          <Label htmlFor="baseUrl">Base URL</Label>
+                          <Label htmlFor="baseUrl">{language === 'en' ? 'Base URL' : 'URL Base'}</Label>
                           <Input
                             id="baseUrl"
                             name="baseUrl"
                             value={hostingConfig.baseUrl}
                             onChange={handleHostingChange}
-                            placeholder="https://yourdomain.com"
+                            placeholder="https://seudominio.com"
                           />
                           <p className="text-xs text-muted-foreground mt-1">
-                            The root URL where your application is hosted
+                            {language === 'en'
+                              ? 'The root URL where your application is hosted'
+                              : 'A URL raiz onde sua aplicação está hospedada'}
                           </p>
                         </div>
                         
@@ -399,11 +461,13 @@ const Installer = () => {
                             onChange={handleHostingChange}
                             className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
                           />
-                          <Label htmlFor="useHttps" className="cursor-pointer">Use HTTPS</Label>
+                          <Label htmlFor="useHttps" className="cursor-pointer">
+                            {language === 'en' ? 'Use HTTPS' : 'Usar HTTPS'}
+                          </Label>
                         </div>
                         
                         <div>
-                          <Label htmlFor="apiPath">API Path</Label>
+                          <Label htmlFor="apiPath">{language === 'en' ? 'API Path' : 'Caminho da API'}</Label>
                           <Input
                             id="apiPath"
                             name="apiPath"
@@ -412,12 +476,14 @@ const Installer = () => {
                             placeholder="/api"
                           />
                           <p className="text-xs text-muted-foreground mt-1">
-                            The path to API endpoints
+                            {language === 'en'
+                              ? 'The path to API endpoints'
+                              : 'O caminho para os endpoints da API'}
                           </p>
                         </div>
                         
                         <div>
-                          <Label htmlFor="assetsPath">Assets Path</Label>
+                          <Label htmlFor="assetsPath">{language === 'en' ? 'Assets Path' : 'Caminho dos Recursos'}</Label>
                           <Input
                             id="assetsPath"
                             name="assetsPath"
@@ -426,17 +492,19 @@ const Installer = () => {
                             placeholder="/assets"
                           />
                           <p className="text-xs text-muted-foreground mt-1">
-                            The path to static assets
+                            {language === 'en'
+                              ? 'The path to static assets'
+                              : 'O caminho para recursos estáticos'}
                           </p>
                         </div>
                       </div>
                       
                       <div className="mt-auto flex justify-between">
                         <Button variant="outline" onClick={prevStep}>
-                          Back
+                          {language === 'en' ? 'Back' : 'Voltar'}
                         </Button>
                         <Button onClick={nextStep}>
-                          Next <ArrowRight className="ml-2 h-4 w-4" />
+                          {language === 'en' ? 'Next' : 'Próximo'} <ArrowRight className="ml-2 h-4 w-4" />
                         </Button>
                       </div>
                     </div>
@@ -444,14 +512,18 @@ const Installer = () => {
 
                   {currentStep === 4 && (
                     <div className="flex-1 flex flex-col">
-                      <h2 className="text-2xl font-bold mb-4">System Configuration</h2>
+                      <h2 className="text-2xl font-bold mb-4">
+                        {language === 'en' ? 'System Configuration' : 'Configuração do Sistema'}
+                      </h2>
                       <p className="mb-6">
-                        Configure your system settings and mining capabilities.
+                        {language === 'en'
+                          ? 'Configure your system settings and mining capabilities.'
+                          : 'Configure as definições do sistema e recursos de mineração.'}
                       </p>
                       
                       <div className="space-y-4 mb-6">
                         <div>
-                          <Label htmlFor="siteName">Site Name</Label>
+                          <Label htmlFor="siteName">{language === 'en' ? 'Site Name' : 'Nome do Site'}</Label>
                           <Input
                             id="siteName"
                             name="siteName"
@@ -469,7 +541,9 @@ const Installer = () => {
                             onChange={handleSystemChange}
                             className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
                           />
-                          <Label htmlFor="cryptoSupport" className="cursor-pointer">Enable Cryptocurrency Support</Label>
+                          <Label htmlFor="cryptoSupport" className="cursor-pointer">
+                            {language === 'en' ? 'Enable Cryptocurrency Support' : 'Habilitar Suporte a Criptomoedas'}
+                          </Label>
                         </div>
                         
                         <div className="flex items-center space-x-2">
@@ -481,16 +555,20 @@ const Installer = () => {
                             onChange={handleSystemChange}
                             className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
                           />
-                          <Label htmlFor="debugMode" className="cursor-pointer">Enable Debug Mode</Label>
+                          <Label htmlFor="debugMode" className="cursor-pointer">
+                            {language === 'en' ? 'Enable Debug Mode' : 'Habilitar Modo de Depuração'}
+                          </Label>
                         </div>
                       </div>
                       
                       <div className="mt-auto flex justify-between">
                         <Button variant="outline" onClick={prevStep}>
-                          Back
+                          {language === 'en' ? 'Back' : 'Voltar'}
                         </Button>
                         <Button onClick={completeInstallation} disabled={isInstalling}>
-                          {isInstalling ? "Installing..." : "Complete Setup"}
+                          {isInstalling 
+                            ? (language === 'en' ? "Installing..." : "Instalando...") 
+                            : (language === 'en' ? "Complete Setup" : "Concluir Configuração")}
                         </Button>
                       </div>
                     </div>
@@ -501,16 +579,22 @@ const Installer = () => {
                       <div className="bg-primary/10 p-4 rounded-full mb-6">
                         <Check className="h-10 w-10 text-primary" />
                       </div>
-                      <h2 className="text-2xl font-bold mb-4">Installation Complete!</h2>
+                      <h2 className="text-2xl font-bold mb-4">
+                        {language === 'en' ? 'Installation Complete!' : 'Instalação Concluída!'}
+                      </h2>
                       <p className="mb-6">
-                        Your AI Mining Matrix application has been successfully installed and configured.
+                        {language === 'en'
+                          ? 'Your AI Mining Matrix application has been successfully installed and configured.'
+                          : 'Sua aplicação AI Mining Matrix foi instalada e configurada com sucesso.'}
                       </p>
                       <p className="mb-8">
-                        You can now log in to your admin panel with the credentials you provided during setup.
+                        {language === 'en'
+                          ? 'You can now log in to your admin panel with the credentials you provided during setup.'
+                          : 'Agora você pode fazer login no seu painel de administração com as credenciais que forneceu durante a configuração.'}
                       </p>
                       
                       <Button onClick={finishInstallation} className="px-8">
-                        Go to Homepage
+                        {language === 'en' ? 'Go to Homepage' : 'Ir para Página Inicial'}
                       </Button>
                     </div>
                   )}
