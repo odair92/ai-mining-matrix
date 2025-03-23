@@ -2,38 +2,51 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ShieldCheck, Users, Wallet, BarChart3, Settings, UserCheck } from 'lucide-react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import GlassMorphism from '@/components/ui/GlassMorphism';
-import Stat from '@/components/ui/Stat';
-import { useToast } from '@/components/ui/use-toast';
-import Header from '@/components/layout/Header';
-import Footer from '@/components/layout/Footer';
+import { Navigate } from 'react-router-dom';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { cryptocurrencies } from '@/lib/crypto';
-import AdminLogin from '@/components/admin/AdminLogin';
-import { useNavigate } from 'react-router-dom';
+import { useToast } from '@/components/ui/use-toast';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import InfoBanner from '@/components/ui/InfoBanner';
 
-const mockUsers = [
-  { id: 1, name: 'John Doe', email: 'john@example.com', balance: '$1,250.00', planType: 'Professional', status: 'Active' },
-  { id: 2, name: 'Jane Smith', email: 'jane@example.com', balance: '$3,840.00', planType: 'Enterprise', status: 'Active' },
-  { id: 3, name: 'Robert Johnson', email: 'robert@example.com', balance: '$750.00', planType: 'Basic', status: 'Inactive' },
-  { id: 4, name: 'Emily Williams', email: 'emily@example.com', balance: '$2,100.00', planType: 'Professional', status: 'Active' },
-  { id: 5, name: 'Michael Brown', email: 'michael@example.com', balance: '$1,925.00', planType: 'Enterprise', status: 'Suspended' },
-];
+// Import mock data utility
+const generateMockUsers = (count: number) => {
+  return Array.from({ length: count }, (_, i) => ({
+    id: i + 1,
+    name: `User ${i + 1}`,
+    email: `user${i + 1}@example.com`,
+    status: Math.random() > 0.3 ? 'active' : 'pending',
+    joinDate: new Date(Date.now() - Math.random() * 10000000000).toISOString().split('T')[0],
+    balance: +(Math.random() * 1000).toFixed(2),
+  }));
+};
 
-const mockTransactions = [
-  { id: 1, user: 'John Doe', type: 'Deposit', amount: '$500.00', currency: 'BTC', status: 'Completed', date: '2023-06-10' },
-  { id: 2, user: 'Jane Smith', type: 'Withdrawal', amount: '$1,200.00', currency: 'ETH', status: 'Pending', date: '2023-06-11' },
-  { id: 3, user: 'Robert Johnson', type: 'Mining Reward', amount: '$75.00', currency: 'USDT', status: 'Completed', date: '2023-06-11' },
-  { id: 4, user: 'Emily Williams', type: 'Deposit', amount: '$2,000.00', currency: 'BTC', status: 'Completed', date: '2023-06-12' },
-  { id: 5, user: 'Michael Brown', type: 'Withdrawal', amount: '$650.00', currency: 'TRX', status: 'Rejected', date: '2023-06-12' },
-];
+const generateMockTransactions = (count: number) => {
+  const types = ['deposit', 'withdrawal', 'mining'];
+  return Array.from({ length: count }, (_, i) => ({
+    id: i + 1,
+    userId: Math.floor(Math.random() * 100) + 1,
+    userName: `User ${Math.floor(Math.random() * 100) + 1}`,
+    type: types[Math.floor(Math.random() * types.length)],
+    amount: +(Math.random() * 1000).toFixed(2),
+    status: Math.random() > 0.3 ? 'pending' : (Math.random() > 0.5 ? 'completed' : 'rejected'),
+    date: new Date(Date.now() - Math.random() * 10000000000).toISOString().split('T')[0],
+  }));
+};
 
-const AdminDashboard = () => {
+const Admin = () => {
   const { toast } = useToast();
-  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('dashboard');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -74,6 +87,7 @@ const AdminDashboard = () => {
         if (!isNaN(authTimeMs) && (currentTime - authTimeMs) < oneDayMs) {
           setIsAuthenticated(true);
         } else {
+          // Clear expired auth
           localStorage.removeItem('adminAuthenticated');
           localStorage.removeItem('adminAuthTime');
           setIsAuthenticated(false);
@@ -86,519 +100,833 @@ const AdminDashboard = () => {
     };
     
     checkAuthentication();
-    
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'adminAuthenticated' || e.key === 'adminAuthTime') {
-        checkAuthentication();
-      }
-    };
-    
-    window.addEventListener('storage', handleStorageChange);
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-    };
   }, []);
-
-  const handleLoginSuccess = () => {
-    setIsAuthenticated(true);
-  };
-
+  
+  // Simulate logout
   const handleLogout = () => {
     localStorage.removeItem('adminAuthenticated');
     localStorage.removeItem('adminAuthTime');
     setIsAuthenticated(false);
     toast({
-      title: "Desconectado",
-      description: "Você foi desconectado do painel de administração.",
+      title: "Logged out",
+      description: "You have been logged out of the admin panel."
     });
-    navigate('/');
   };
-
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1
-      }
-    }
-  };
-
-  const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: {
-      y: 0,
-      opacity: 1
-    }
-  };
-
+  
   if (isLoading) {
     return (
-      <div className="min-h-screen flex flex-col bg-gradient-to-br from-background to-secondary/20">
-        <Header />
-        <div className="flex-1 flex items-center justify-center">
-          <div className="animate-pulse text-xl">Carregando...</div>
-        </div>
-        <Footer />
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full"></div>
       </div>
     );
   }
-
+  
   if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen flex flex-col bg-gradient-to-br from-background to-secondary/20">
-        <Header />
-        <AdminLogin onLoginSuccess={handleLoginSuccess} />
-        <Footer />
-      </div>
-    );
+    return <Navigate to="/auth" />;
   }
 
+  const usersList = generateMockUsers(100);
+  const transactionsList = generateMockTransactions(200);
+  const pendingUsers = usersList.filter(user => user.status === 'pending');
+  const pendingTransactions = transactionsList.filter(tx => tx.status === 'pending');
+  
+  // Get admin email from localStorage
+  const adminEmail = localStorage.getItem('adminEmail') || 'admin@example.com';
+  
+  // Get system settings
+  const systemSettingsStr = localStorage.getItem('systemSettings');
+  const systemSettings = systemSettingsStr ? JSON.parse(systemSettingsStr) : {
+    siteName: 'AI Mining Matrix',
+    cryptoSupport: true,
+    debugMode: false
+  };
+  
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-background to-secondary/20">
-      <Header />
-      
-      <div className="flex-1 container mx-auto px-4 py-8">
-        <motion.div 
-          className="flex flex-col md:flex-row gap-6 mb-10"
-          initial="hidden"
-          animate="visible"
-          variants={containerVariants}
-        >
-          <motion.div variants={itemVariants} className="md:w-64 shrink-0">
-            <GlassMorphism className="p-4">
-              <div className="flex items-center space-x-3 p-2 mb-6">
-                <div className="bg-primary/10 p-2 rounded-full">
-                  <ShieldCheck className="h-6 w-6 text-primary" />
-                </div>
-                <div>
-                  <h2 className="font-bold">Admin Panel</h2>
-                  <p className="text-xs text-muted-foreground">Management Console</p>
-                </div>
-              </div>
-              
-              <nav className="space-y-1">
-                <Button 
-                  variant={activeTab === 'dashboard' ? "default" : "ghost"} 
-                  className="w-full justify-start" 
-                  onClick={() => setActiveTab('dashboard')}
-                >
-                  <BarChart3 className="mr-2 h-4 w-4" />
-                  Dashboard
-                </Button>
-                <Button 
-                  variant={activeTab === 'users' ? "default" : "ghost"} 
-                  className="w-full justify-start" 
-                  onClick={() => setActiveTab('users')}
-                >
-                  <Users className="mr-2 h-4 w-4" />
-                  Users
-                </Button>
-                <Button 
-                  variant={activeTab === 'transactions' ? "default" : "ghost"} 
-                  className="w-full justify-start" 
-                  onClick={() => setActiveTab('transactions')}
-                >
-                  <Wallet className="mr-2 h-4 w-4" />
-                  Transactions
-                </Button>
-                <Button 
-                  variant={activeTab === 'settings' ? "default" : "ghost"} 
-                  className="w-full justify-start" 
-                  onClick={() => setActiveTab('settings')}
-                >
-                  <Settings className="mr-2 h-4 w-4" />
-                  Settings
-                </Button>
-                
-                <Button 
-                  variant="destructive"
-                  className="w-full justify-start mt-6" 
-                  onClick={handleLogout}
-                >
-                  <ShieldCheck className="mr-2 h-4 w-4" />
-                  Logout
-                </Button>
-              </nav>
-            </GlassMorphism>
-          </motion.div>
+    <div className="min-h-screen bg-background">
+      {/* Admin Header */}
+      <header className="border-b bg-card">
+        <div className="container flex h-16 items-center justify-between py-4">
+          <div className="flex items-center gap-4">
+            <ShieldCheck className="h-6 w-6 text-primary" />
+            <h1 className="text-xl font-bold">{systemSettings.siteName} - Admin</h1>
+          </div>
           
-          <motion.div variants={itemVariants} className="flex-1">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+                <Avatar>
+                  <AvatarImage src="/placeholder.svg" />
+                  <AvatarFallback>AD</AvatarFallback>
+                </Avatar>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>
+                <div className="flex flex-col space-y-1">
+                  <p className="text-sm font-medium leading-none">Admin</p>
+                  <p className="text-xs leading-none text-muted-foreground">{adminEmail}</p>
+                </div>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleLogout}>Log out</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </header>
+      
+      {/* Admin Content */}
+      <div className="container py-6">
+        <InfoBanner />
+        
+        <div className="flex flex-col md:flex-row gap-6">
+          {/* Sidebar Navigation */}
+          <aside className="md:w-64">
+            <nav className="grid gap-2">
+              <Button
+                variant={activeTab === 'dashboard' ? 'default' : 'ghost'}
+                className="justify-start"
+                onClick={() => setActiveTab('dashboard')}
+              >
+                <BarChart3 className="mr-2 h-4 w-4" />
+                Dashboard
+              </Button>
+              <Button
+                variant={activeTab === 'users' ? 'default' : 'ghost'}
+                className="justify-start"
+                onClick={() => setActiveTab('users')}
+              >
+                <Users className="mr-2 h-4 w-4" />
+                Users
+                {pendingUsers.length > 0 && (
+                  <Badge variant="destructive" className="ml-auto">
+                    {pendingUsers.length}
+                  </Badge>
+                )}
+              </Button>
+              <Button
+                variant={activeTab === 'transactions' ? 'default' : 'ghost'}
+                className="justify-start"
+                onClick={() => setActiveTab('transactions')}
+              >
+                <Wallet className="mr-2 h-4 w-4" />
+                Transactions
+                {pendingTransactions.length > 0 && (
+                  <Badge variant="destructive" className="ml-auto">
+                    {pendingTransactions.length}
+                  </Badge>
+                )}
+              </Button>
+              <Button
+                variant={activeTab === 'settings' ? 'default' : 'ghost'}
+                className="justify-start"
+                onClick={() => setActiveTab('settings')}
+              >
+                <Settings className="mr-2 h-4 w-4" />
+                Settings
+              </Button>
+            </nav>
+          </aside>
+          
+          {/* Main Content */}
+          <main className="flex-1">
+            {/* Dashboard Content */}
             {activeTab === 'dashboard' && (
-              <div className="space-y-6">
-                <h1 className="text-2xl font-bold mb-6">Admin Dashboard</h1>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="space-y-6"
+              >
+                <h2 className="text-2xl font-bold">Dashboard</h2>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  <Stat 
-                    title="Total Users" 
-                    value="1,245" 
-                    icon={<Users className="h-5 w-5 text-primary" />}
-                    change="12"
-                    isPositive={true}
-                  />
-                  <Stat 
-                    title="Active Miners" 
-                    value="876" 
-                    icon={<UserCheck className="h-5 w-5 text-primary" />}
-                    change="8"
-                    isPositive={true}
-                  />
-                  <Stat 
-                    title="Today's Transactions" 
-                    value="$12,450" 
-                    icon={<Wallet className="h-5 w-5 text-primary" />}
-                    change="5"
-                    isPositive={true}
-                  />
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+                      <Users className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">{usersList.length}</div>
+                      <p className="text-xs text-muted-foreground">
+                        +{Math.floor(Math.random() * 20)} new today
+                      </p>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">Active Miners</CardTitle>
+                      <UserCheck className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">{Math.floor(usersList.length * 0.7)}</div>
+                      <p className="text-xs text-muted-foreground">
+                        {Math.floor(usersList.length * 0.7 / usersList.length * 100)}% of total users
+                      </p>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">Total Transactions</CardTitle>
+                      <Wallet className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">{transactionsList.length}</div>
+                      <p className="text-xs text-muted-foreground">
+                        +{Math.floor(Math.random() * 30)} in last 24h
+                      </p>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">Pending Approvals</CardTitle>
+                      <ShieldCheck className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">
+                        {pendingUsers.length + pendingTransactions.length}
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {pendingUsers.length} users, {pendingTransactions.length} transactions
+                      </p>
+                    </CardContent>
+                  </Card>
                 </div>
                 
-                <GlassMorphism className="p-6">
-                  <h2 className="text-lg font-medium mb-4">Recent Transactions</h2>
-                  <div className="overflow-x-auto">
-                    <table className="w-full">
-                      <thead>
-                        <tr className="border-b">
-                          <th className="pb-3 text-left">User</th>
-                          <th className="pb-3 text-left">Type</th>
-                          <th className="pb-3 text-left">Amount</th>
-                          <th className="pb-3 text-left">Status</th>
-                          <th className="pb-3 text-left">Date</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {mockTransactions.slice(0, 3).map(transaction => (
-                          <tr key={transaction.id} className="border-b last:border-0">
-                            <td className="py-3">{transaction.user}</td>
-                            <td className="py-3">{transaction.type}</td>
-                            <td className="py-3">
-                              {transaction.amount} 
-                              <span className="text-xs ml-1">({transaction.currency})</span>
-                            </td>
-                            <td className="py-3">
-                              <span className={`px-2 py-1 rounded-full text-xs ${
-                                transaction.status === 'Completed' ? 'bg-green-100 text-green-800' :
-                                transaction.status === 'Pending' ? 'bg-yellow-100 text-yellow-800' :
-                                'bg-red-100 text-red-800'
-                              }`}>
-                                {transaction.status}
-                              </span>
-                            </td>
-                            <td className="py-3">{transaction.date}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </GlassMorphism>
-              </div>
-            )}
-            
-            {activeTab === 'users' && (
-              <div className="space-y-6">
-                <h1 className="text-2xl font-bold mb-6">User Management</h1>
-                
-                <GlassMorphism className="p-6">
-                  <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-lg font-medium">All Users</h2>
-                    <Input type="search" placeholder="Search users..." className="max-w-xs" />
-                  </div>
-                  
-                  <div className="overflow-x-auto">
-                    <table className="w-full">
-                      <thead>
-                        <tr className="border-b">
-                          <th className="pb-3 text-left">Name</th>
-                          <th className="pb-3 text-left">Email</th>
-                          <th className="pb-3 text-left">Balance</th>
-                          <th className="pb-3 text-left">Plan</th>
-                          <th className="pb-3 text-left">Status</th>
-                          <th className="pb-3 text-left">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {mockUsers.map(user => (
-                          <tr key={user.id} className="border-b last:border-0">
-                            <td className="py-3">{user.name}</td>
-                            <td className="py-3">{user.email}</td>
-                            <td className="py-3">{user.balance}</td>
-                            <td className="py-3">{user.planType}</td>
-                            <td className="py-3">
-                              <span className={`px-2 py-1 rounded-full text-xs ${
-                                user.status === 'Active' ? 'bg-green-100 text-green-800' :
-                                user.status === 'Inactive' ? 'bg-gray-100 text-gray-800' :
-                                'bg-red-100 text-red-800'
-                              }`}>
-                                {user.status}
-                              </span>
-                            </td>
-                            <td className="py-3">
-                              <div className="flex space-x-2">
-                                <Button 
-                                  variant="outline" 
-                                  size="sm"
-                                  onClick={() => handleUserAction(user.id, 'Edited')}
-                                >
-                                  Edit
-                                </Button>
-                                <Button 
-                                  variant="destructive" 
-                                  size="sm"
-                                  onClick={() => handleUserAction(user.id, 'Suspended')}
-                                >
-                                  Suspend
-                                </Button>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <Card className="col-span-1">
+                    <CardHeader>
+                      <CardTitle>Recent Registrations</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        {usersList.slice(0, 5).map((user) => (
+                          <div key={user.id} className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <Avatar className="h-8 w-8">
+                                <AvatarImage src={`/placeholder.svg`} />
+                                <AvatarFallback>
+                                  {user.name.substring(0, 2).toUpperCase()}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div>
+                                <p className="text-sm font-medium">{user.name}</p>
+                                <p className="text-xs text-muted-foreground">{user.email}</p>
                               </div>
-                            </td>
-                          </tr>
+                            </div>
+                            <Badge variant={user.status === 'active' ? 'default' : 'outline'}>
+                              {user.status}
+                            </Badge>
+                          </div>
                         ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </GlassMorphism>
-              </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card className="col-span-1">
+                    <CardHeader>
+                      <CardTitle>Pending Approvals</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        {pendingUsers.slice(0, 5).map((user) => (
+                          <div key={user.id} className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <Avatar className="h-8 w-8">
+                                <AvatarImage src={`/placeholder.svg`} />
+                                <AvatarFallback>
+                                  {user.name.substring(0, 2).toUpperCase()}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div>
+                                <p className="text-sm font-medium">{user.name}</p>
+                                <p className="text-xs text-muted-foreground">{user.email}</p>
+                              </div>
+                            </div>
+                            <div className="flex gap-2">
+                              <Button size="sm" variant="outline" onClick={() => handleUserAction(user.id, 'Approved')}>
+                                Approve
+                              </Button>
+                              <Button size="sm" variant="destructive" onClick={() => handleUserAction(user.id, 'Rejected')}>
+                                Reject
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                        {pendingUsers.length === 0 && (
+                          <p className="text-center text-sm text-muted-foreground py-4">
+                            No pending user approvals
+                          </p>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </motion.div>
             )}
             
-            {activeTab === 'transactions' && (
-              <div className="space-y-6">
-                <h1 className="text-2xl font-bold mb-6">Transaction Management</h1>
+            {/* Users Content */}
+            {activeTab === 'users' && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="space-y-6"
+              >
+                <h2 className="text-2xl font-bold">User Management</h2>
                 
                 <Tabs defaultValue="all">
-                  <TabsList className="mb-4">
-                    <TabsTrigger value="all">All</TabsTrigger>
-                    <TabsTrigger value="pending">Pending</TabsTrigger>
-                    <TabsTrigger value="completed">Completed</TabsTrigger>
-                    <TabsTrigger value="rejected">Rejected</TabsTrigger>
+                  <TabsList>
+                    <TabsTrigger value="all">All Users</TabsTrigger>
+                    <TabsTrigger value="pending">
+                      Pending Approval
+                      {pendingUsers.length > 0 && (
+                        <Badge variant="destructive" className="ml-2">
+                          {pendingUsers.length}
+                        </Badge>
+                      )}
+                    </TabsTrigger>
+                    <TabsTrigger value="active">Active</TabsTrigger>
                   </TabsList>
                   
-                  <TabsContent value="all">
-                    <GlassMorphism className="p-6">
-                      <div className="overflow-x-auto">
-                        <table className="w-full">
-                          <thead>
-                            <tr className="border-b">
-                              <th className="pb-3 text-left">User</th>
-                              <th className="pb-3 text-left">Type</th>
-                              <th className="pb-3 text-left">Amount</th>
-                              <th className="pb-3 text-left">Status</th>
-                              <th className="pb-3 text-left">Date</th>
-                              <th className="pb-3 text-left">Actions</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {mockTransactions.map(transaction => (
-                              <tr key={transaction.id} className="border-b last:border-0">
-                                <td className="py-3">{transaction.user}</td>
-                                <td className="py-3">{transaction.type}</td>
-                                <td className="py-3">
-                                  {transaction.amount} 
-                                  <span className="text-xs ml-1">({transaction.currency})</span>
-                                </td>
-                                <td className="py-3">
-                                  <span className={`px-2 py-1 rounded-full text-xs ${
-                                    transaction.status === 'Completed' ? 'bg-green-100 text-green-800' :
-                                    transaction.status === 'Pending' ? 'bg-yellow-100 text-yellow-800' :
-                                    'bg-red-100 text-red-800'
-                                  }`}>
-                                    {transaction.status}
-                                  </span>
-                                </td>
-                                <td className="py-3">{transaction.date}</td>
-                                <td className="py-3">
-                                  <div className="flex space-x-2">
-                                    <Button 
-                                      variant="outline" 
-                                      size="sm"
-                                      onClick={() => handleApproveTransaction(transaction.id)}
-                                      disabled={transaction.status !== 'Pending'}
-                                    >
-                                      Approve
-                                    </Button>
-                                    <Button 
-                                      variant="destructive" 
-                                      size="sm"
-                                      onClick={() => handleRejectTransaction(transaction.id)}
-                                      disabled={transaction.status !== 'Pending'}
-                                    >
-                                      Reject
-                                    </Button>
-                                  </div>
-                                </td>
+                  <TabsContent value="all" className="space-y-4">
+                    <Card>
+                      <CardContent className="pt-6">
+                        <div className="rounded-md border">
+                          <table className="w-full">
+                            <thead className="bg-muted/50">
+                              <tr className="text-left">
+                                <th className="p-2 font-medium">User</th>
+                                <th className="p-2 font-medium">Status</th>
+                                <th className="p-2 font-medium">Joined</th>
+                                <th className="p-2 font-medium">Balance</th>
+                                <th className="p-2 font-medium text-right">Actions</th>
                               </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    </GlassMorphism>
-                  </TabsContent>
-                  
-                  <TabsContent value="pending">
-                    <GlassMorphism className="p-6">
-                      <div className="overflow-x-auto">
-                        <table className="w-full">
-                          <thead>
-                            <tr className="border-b">
-                              <th className="pb-3 text-left">User</th>
-                              <th className="pb-3 text-left">Type</th>
-                              <th className="pb-3 text-left">Amount</th>
-                              <th className="pb-3 text-left">Date</th>
-                              <th className="pb-3 text-left">Actions</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {mockTransactions
-                              .filter(t => t.status === 'Pending')
-                              .map(transaction => (
-                                <tr key={transaction.id} className="border-b last:border-0">
-                                  <td className="py-3">{transaction.user}</td>
-                                  <td className="py-3">{transaction.type}</td>
-                                  <td className="py-3">
-                                    {transaction.amount} 
-                                    <span className="text-xs ml-1">({transaction.currency})</span>
-                                  </td>
-                                  <td className="py-3">{transaction.date}</td>
-                                  <td className="py-3">
-                                    <div className="flex space-x-2">
-                                      <Button 
-                                        variant="outline" 
-                                        size="sm"
-                                        onClick={() => handleApproveTransaction(transaction.id)}
-                                      >
-                                        Approve
-                                      </Button>
-                                      <Button 
-                                        variant="destructive" 
-                                        size="sm"
-                                        onClick={() => handleRejectTransaction(transaction.id)}
-                                      >
-                                        Reject
-                                      </Button>
+                            </thead>
+                            <tbody>
+                              {usersList.slice(0, 10).map((user) => (
+                                <tr key={user.id} className="border-t">
+                                  <td className="p-2">
+                                    <div className="flex items-center gap-2">
+                                      <Avatar className="h-8 w-8">
+                                        <AvatarImage src={`/placeholder.svg`} />
+                                        <AvatarFallback>
+                                          {user.name.substring(0, 2).toUpperCase()}
+                                        </AvatarFallback>
+                                      </Avatar>
+                                      <div>
+                                        <p className="font-medium">{user.name}</p>
+                                        <p className="text-xs text-muted-foreground">{user.email}</p>
+                                      </div>
                                     </div>
                                   </td>
+                                  <td className="p-2">
+                                    <Badge variant={user.status === 'active' ? 'default' : 'outline'}>
+                                      {user.status}
+                                    </Badge>
+                                  </td>
+                                  <td className="p-2 text-muted-foreground">{user.joinDate}</td>
+                                  <td className="p-2 font-medium">${user.balance}</td>
+                                  <td className="p-2 text-right">
+                                    <DropdownMenu>
+                                      <DropdownMenuTrigger asChild>
+                                        <Button variant="ghost" size="sm">
+                                          Actions
+                                        </Button>
+                                      </DropdownMenuTrigger>
+                                      <DropdownMenuContent align="end">
+                                        <DropdownMenuItem>View Details</DropdownMenuItem>
+                                        <DropdownMenuItem>Edit User</DropdownMenuItem>
+                                        <DropdownMenuSeparator />
+                                        <DropdownMenuItem className="text-destructive">
+                                          Suspend User
+                                        </DropdownMenuItem>
+                                      </DropdownMenuContent>
+                                    </DropdownMenu>
+                                  </td>
                                 </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    </GlassMorphism>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </CardContent>
+                    </Card>
                   </TabsContent>
                   
-                  <TabsContent value="completed">
-                    <GlassMorphism className="p-6">
-                      <div className="overflow-x-auto">
-                        <table className="w-full">
-                          <thead>
-                            <tr className="border-b">
-                              <th className="pb-3 text-left">User</th>
-                              <th className="pb-3 text-left">Type</th>
-                              <th className="pb-3 text-left">Amount</th>
-                              <th className="pb-3 text-left">Date</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {mockTransactions
-                              .filter(t => t.status === 'Completed')
-                              .map(transaction => (
-                                <tr key={transaction.id} className="border-b last:border-0">
-                                  <td className="py-3">{transaction.user}</td>
-                                  <td className="py-3">{transaction.type}</td>
-                                  <td className="py-3">
-                                    {transaction.amount} 
-                                    <span className="text-xs ml-1">({transaction.currency})</span>
-                                  </td>
-                                  <td className="py-3">{transaction.date}</td>
+                  <TabsContent value="pending" className="space-y-4">
+                    <Card>
+                      <CardContent className="pt-6">
+                        {pendingUsers.length === 0 ? (
+                          <div className="text-center py-8">
+                            <p className="text-muted-foreground">No pending user approvals</p>
+                          </div>
+                        ) : (
+                          <div className="rounded-md border">
+                            <table className="w-full">
+                              <thead className="bg-muted/50">
+                                <tr className="text-left">
+                                  <th className="p-2 font-medium">User</th>
+                                  <th className="p-2 font-medium">Joined</th>
+                                  <th className="p-2 font-medium text-right">Actions</th>
                                 </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    </GlassMorphism>
+                              </thead>
+                              <tbody>
+                                {pendingUsers.map((user) => (
+                                  <tr key={user.id} className="border-t">
+                                    <td className="p-2">
+                                      <div className="flex items-center gap-2">
+                                        <Avatar className="h-8 w-8">
+                                          <AvatarImage src={`/placeholder.svg`} />
+                                          <AvatarFallback>
+                                            {user.name.substring(0, 2).toUpperCase()}
+                                          </AvatarFallback>
+                                        </Avatar>
+                                        <div>
+                                          <p className="font-medium">{user.name}</p>
+                                          <p className="text-xs text-muted-foreground">{user.email}</p>
+                                        </div>
+                                      </div>
+                                    </td>
+                                    <td className="p-2 text-muted-foreground">{user.joinDate}</td>
+                                    <td className="p-2 text-right">
+                                      <div className="flex gap-2 justify-end">
+                                        <Button size="sm" variant="outline" onClick={() => handleUserAction(user.id, 'Approved')}>
+                                          Approve
+                                        </Button>
+                                        <Button size="sm" variant="destructive" onClick={() => handleUserAction(user.id, 'Rejected')}>
+                                          Reject
+                                        </Button>
+                                      </div>
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
                   </TabsContent>
                   
-                  <TabsContent value="rejected">
-                    <GlassMorphism className="p-6">
-                      <div className="overflow-x-auto">
-                        <table className="w-full">
-                          <thead>
-                            <tr className="border-b">
-                              <th className="pb-3 text-left">User</th>
-                              <th className="pb-3 text-left">Type</th>
-                              <th className="pb-3 text-left">Amount</th>
-                              <th className="pb-3 text-left">Date</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {mockTransactions
-                              .filter(t => t.status === 'Rejected')
-                              .map(transaction => (
-                                <tr key={transaction.id} className="border-b last:border-0">
-                                  <td className="py-3">{transaction.user}</td>
-                                  <td className="py-3">{transaction.type}</td>
-                                  <td className="py-3">
-                                    {transaction.amount} 
-                                    <span className="text-xs ml-1">({transaction.currency})</span>
-                                  </td>
-                                  <td className="py-3">{transaction.date}</td>
-                                </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    </GlassMorphism>
+                  <TabsContent value="active" className="space-y-4">
+                    <Card>
+                      <CardContent className="pt-6">
+                        <div className="rounded-md border">
+                          <table className="w-full">
+                            <thead className="bg-muted/50">
+                              <tr className="text-left">
+                                <th className="p-2 font-medium">User</th>
+                                <th className="p-2 font-medium">Joined</th>
+                                <th className="p-2 font-medium">Balance</th>
+                                <th className="p-2 font-medium text-right">Actions</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {usersList
+                                .filter((user) => user.status === 'active')
+                                .slice(0, 10)
+                                .map((user) => (
+                                  <tr key={user.id} className="border-t">
+                                    <td className="p-2">
+                                      <div className="flex items-center gap-2">
+                                        <Avatar className="h-8 w-8">
+                                          <AvatarImage src={`/placeholder.svg`} />
+                                          <AvatarFallback>
+                                            {user.name.substring(0, 2).toUpperCase()}
+                                          </AvatarFallback>
+                                        </Avatar>
+                                        <div>
+                                          <p className="font-medium">{user.name}</p>
+                                          <p className="text-xs text-muted-foreground">{user.email}</p>
+                                        </div>
+                                      </div>
+                                    </td>
+                                    <td className="p-2 text-muted-foreground">{user.joinDate}</td>
+                                    <td className="p-2 font-medium">${user.balance}</td>
+                                    <td className="p-2 text-right">
+                                      <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                          <Button variant="ghost" size="sm">
+                                            Actions
+                                          </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="end">
+                                          <DropdownMenuItem>View Details</DropdownMenuItem>
+                                          <DropdownMenuItem>Edit User</DropdownMenuItem>
+                                          <DropdownMenuSeparator />
+                                          <DropdownMenuItem className="text-destructive">
+                                            Suspend User
+                                          </DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                      </DropdownMenu>
+                                    </td>
+                                  </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </CardContent>
+                    </Card>
                   </TabsContent>
                 </Tabs>
-              </div>
+              </motion.div>
             )}
             
-            {activeTab === 'settings' && (
-              <div className="space-y-6">
-                <h1 className="text-2xl font-bold mb-6">System Settings</h1>
+            {/* Transactions Content */}
+            {activeTab === 'transactions' && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="space-y-6"
+              >
+                <h2 className="text-2xl font-bold">Transaction Management</h2>
                 
-                <GlassMorphism className="p-6">
-                  <h2 className="text-lg font-medium mb-4">General Settings</h2>
+                <Tabs defaultValue="all">
+                  <TabsList>
+                    <TabsTrigger value="all">All Transactions</TabsTrigger>
+                    <TabsTrigger value="pending">
+                      Pending Approval
+                      {pendingTransactions.length > 0 && (
+                        <Badge variant="destructive" className="ml-2">
+                          {pendingTransactions.length}
+                        </Badge>
+                      )}
+                    </TabsTrigger>
+                    <TabsTrigger value="deposits">Deposits</TabsTrigger>
+                    <TabsTrigger value="withdrawals">Withdrawals</TabsTrigger>
+                  </TabsList>
                   
-                  <div className="space-y-4">
-                    <div>
-                      <Label htmlFor="siteName">Site Name</Label>
-                      <Input id="siteName" defaultValue="AI Mining Platform" />
-                    </div>
-                    
-                    <div>
-                      <Label htmlFor="siteDescription">Site Description</Label>
-                      <Input id="siteDescription" defaultValue="Advanced AI-powered cryptocurrency mining platform" />
-                    </div>
-                    
-                    <h3 className="text-md font-medium mt-6 mb-2">Supported Cryptocurrencies</h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
-                      {cryptocurrencies.map(crypto => (
-                        <div 
-                          key={crypto.id}
-                          className="flex items-center p-3 border rounded-md"
-                        >
-                          <div className={`mr-2 ${crypto.color}`}>
-                            {crypto.icon}
-                          </div>
-                          <div>
-                            <p className="font-medium">{crypto.name}</p>
-                            <p className="text-xs text-muted-foreground">{crypto.symbol}</p>
-                          </div>
+                  <TabsContent value="all" className="space-y-4">
+                    <Card>
+                      <CardContent className="pt-6">
+                        <div className="rounded-md border">
+                          <table className="w-full">
+                            <thead className="bg-muted/50">
+                              <tr className="text-left">
+                                <th className="p-2 font-medium">ID</th>
+                                <th className="p-2 font-medium">User</th>
+                                <th className="p-2 font-medium">Type</th>
+                                <th className="p-2 font-medium">Amount</th>
+                                <th className="p-2 font-medium">Status</th>
+                                <th className="p-2 font-medium">Date</th>
+                                <th className="p-2 font-medium text-right">Actions</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {transactionsList.slice(0, 10).map((tx) => (
+                                <tr key={tx.id} className="border-t">
+                                  <td className="p-2 text-muted-foreground">#{tx.id}</td>
+                                  <td className="p-2">{tx.userName}</td>
+                                  <td className="p-2">
+                                    <Badge variant="outline">{tx.type}</Badge>
+                                  </td>
+                                  <td className="p-2 font-medium">${tx.amount}</td>
+                                  <td className="p-2">
+                                    <Badge 
+                                      variant={
+                                        tx.status === 'completed' ? 'default' : 
+                                        tx.status === 'pending' ? 'outline' : 'destructive'
+                                      }
+                                    >
+                                      {tx.status}
+                                    </Badge>
+                                  </td>
+                                  <td className="p-2 text-muted-foreground">{tx.date}</td>
+                                  <td className="p-2 text-right">
+                                    {tx.status === 'pending' ? (
+                                      <div className="flex gap-2 justify-end">
+                                        <Button size="sm" variant="outline" onClick={() => handleApproveTransaction(tx.id)}>
+                                          Approve
+                                        </Button>
+                                        <Button size="sm" variant="destructive" onClick={() => handleRejectTransaction(tx.id)}>
+                                          Reject
+                                        </Button>
+                                      </div>
+                                    ) : (
+                                      <Button variant="ghost" size="sm">
+                                        View
+                                      </Button>
+                                    )}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
                         </div>
-                      ))}
-                    </div>
-                    
-                    <div className="pt-4">
-                      <Button>Save Settings</Button>
-                    </div>
-                  </div>
-                </GlassMorphism>
-              </div>
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+                  
+                  <TabsContent value="pending" className="space-y-4">
+                    <Card>
+                      <CardContent className="pt-6">
+                        {pendingTransactions.length === 0 ? (
+                          <div className="text-center py-8">
+                            <p className="text-muted-foreground">No pending transactions</p>
+                          </div>
+                        ) : (
+                          <div className="rounded-md border">
+                            <table className="w-full">
+                              <thead className="bg-muted/50">
+                                <tr className="text-left">
+                                  <th className="p-2 font-medium">ID</th>
+                                  <th className="p-2 font-medium">User</th>
+                                  <th className="p-2 font-medium">Type</th>
+                                  <th className="p-2 font-medium">Amount</th>
+                                  <th className="p-2 font-medium">Date</th>
+                                  <th className="p-2 font-medium text-right">Actions</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {pendingTransactions.map((tx) => (
+                                  <tr key={tx.id} className="border-t">
+                                    <td className="p-2 text-muted-foreground">#{tx.id}</td>
+                                    <td className="p-2">{tx.userName}</td>
+                                    <td className="p-2">
+                                      <Badge variant="outline">{tx.type}</Badge>
+                                    </td>
+                                    <td className="p-2 font-medium">${tx.amount}</td>
+                                    <td className="p-2 text-muted-foreground">{tx.date}</td>
+                                    <td className="p-2 text-right">
+                                      <div className="flex gap-2 justify-end">
+                                        <Button size="sm" variant="outline" onClick={() => handleApproveTransaction(tx.id)}>
+                                          Approve
+                                        </Button>
+                                        <Button size="sm" variant="destructive" onClick={() => handleRejectTransaction(tx.id)}>
+                                          Reject
+                                        </Button>
+                                      </div>
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+                  
+                  <TabsContent value="deposits" className="space-y-4">
+                    <Card>
+                      <CardContent className="pt-6">
+                        <div className="rounded-md border">
+                          <table className="w-full">
+                            <thead className="bg-muted/50">
+                              <tr className="text-left">
+                                <th className="p-2 font-medium">ID</th>
+                                <th className="p-2 font-medium">User</th>
+                                <th className="p-2 font-medium">Amount</th>
+                                <th className="p-2 font-medium">Status</th>
+                                <th className="p-2 font-medium">Date</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {transactionsList
+                                .filter((tx) => tx.type === 'deposit')
+                                .slice(0, 10)
+                                .map((tx) => (
+                                  <tr key={tx.id} className="border-t">
+                                    <td className="p-2 text-muted-foreground">#{tx.id}</td>
+                                    <td className="p-2">{tx.userName}</td>
+                                    <td className="p-2 font-medium">${tx.amount}</td>
+                                    <td className="p-2">
+                                      <Badge 
+                                        variant={
+                                          tx.status === 'completed' ? 'default' : 
+                                          tx.status === 'pending' ? 'outline' : 'destructive'
+                                        }
+                                      >
+                                        {tx.status}
+                                      </Badge>
+                                    </td>
+                                    <td className="p-2 text-muted-foreground">{tx.date}</td>
+                                  </tr>
+                              ))}
+                              {transactionsList.filter(tx => tx.type === 'deposit').length === 0 && (
+                                <tr>
+                                  <td colSpan={5} className="p-4 text-center text-muted-foreground">
+                                    No deposit transactions found
+                                  </td>
+                                </tr>
+                              )}
+                            </tbody>
+                          </table>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+                  
+                  <TabsContent value="withdrawals" className="space-y-4">
+                    <Card>
+                      <CardContent className="pt-6">
+                        <div className="rounded-md border">
+                          <table className="w-full">
+                            <thead className="bg-muted/50">
+                              <tr className="text-left">
+                                <th className="p-2 font-medium">ID</th>
+                                <th className="p-2 font-medium">User</th>
+                                <th className="p-2 font-medium">Amount</th>
+                                <th className="p-2 font-medium">Status</th>
+                                <th className="p-2 font-medium">Date</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {transactionsList
+                                .filter((tx) => tx.type === 'withdrawal')
+                                .slice(0, 10)
+                                .map((tx) => (
+                                  <tr key={tx.id} className="border-t">
+                                    <td className="p-2 text-muted-foreground">#{tx.id}</td>
+                                    <td className="p-2">{tx.userName}</td>
+                                    <td className="p-2 font-medium">${tx.amount}</td>
+                                    <td className="p-2">
+                                      <Badge 
+                                        variant={
+                                          tx.status === 'completed' ? 'default' : 
+                                          tx.status === 'pending' ? 'outline' : 'destructive'
+                                        }
+                                      >
+                                        {tx.status}
+                                      </Badge>
+                                    </td>
+                                    <td className="p-2 text-muted-foreground">{tx.date}</td>
+                                  </tr>
+                              ))}
+                              {transactionsList.filter(tx => tx.type === 'withdrawal').length === 0 && (
+                                <tr>
+                                  <td colSpan={5} className="p-4 text-center text-muted-foreground">
+                                    No withdrawal transactions found
+                                  </td>
+                                </tr>
+                              )}
+                            </tbody>
+                          </table>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+                </Tabs>
+              </motion.div>
             )}
-          </motion.div>
-        </motion.div>
+            
+            {/* Settings Content */}
+            {activeTab === 'settings' && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="space-y-6"
+              >
+                <h2 className="text-2xl font-bold">System Settings</h2>
+                
+                <Card>
+                  <CardHeader>
+                    <CardTitle>General Configuration</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="grid gap-1">
+                        <label className="text-sm font-medium">Site Name</label>
+                        <input
+                          type="text"
+                          defaultValue={systemSettings.siteName}
+                          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                        />
+                      </div>
+                      
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          id="cryptoSupport"
+                          defaultChecked={systemSettings.cryptoSupport}
+                          className="h-4 w-4 rounded border-gray-300"
+                        />
+                        <label htmlFor="cryptoSupport" className="text-sm font-medium">
+                          Enable Cryptocurrency Support
+                        </label>
+                      </div>
+                      
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          id="debugMode"
+                          defaultChecked={systemSettings.debugMode}
+                          className="h-4 w-4 rounded border-gray-300"
+                        />
+                        <label htmlFor="debugMode" className="text-sm font-medium">
+                          Enable Debug Mode
+                        </label>
+                      </div>
+                      
+                      <Separator className="my-4" />
+                      
+                      <Button 
+                        onClick={() => 
+                          toast({
+                            title: "Settings Saved",
+                            description: "Your system settings have been updated successfully."
+                          })
+                        }
+                      >
+                        Save Settings
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Administrator Account</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="grid gap-1">
+                        <label className="text-sm font-medium">Admin Email</label>
+                        <input
+                          type="email"
+                          defaultValue={adminEmail}
+                          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                        />
+                      </div>
+                      
+                      <div className="grid gap-1">
+                        <label className="text-sm font-medium">New Password</label>
+                        <input
+                          type="password"
+                          placeholder="Enter new password"
+                          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                        />
+                      </div>
+                      
+                      <div className="grid gap-1">
+                        <label className="text-sm font-medium">Confirm New Password</label>
+                        <input
+                          type="password"
+                          placeholder="Confirm new password"
+                          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                        />
+                      </div>
+                      
+                      <Button 
+                        onClick={() => 
+                          toast({
+                            title: "Admin Account Updated",
+                            description: "Your administrator account has been updated successfully."
+                          })
+                        }
+                      >
+                        Update Account
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )}
+          </main>
+        </div>
       </div>
-      
-      <Footer />
     </div>
   );
 };
 
-export default AdminDashboard;
+export default Admin;
