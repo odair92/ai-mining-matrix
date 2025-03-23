@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ShieldCheck, Users, Wallet, BarChart3, Settings, UserCheck } from 'lucide-react';
@@ -36,6 +37,29 @@ const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Add missing handlers for user actions
+  const handleUserAction = (userId: number, action: string) => {
+    toast({
+      title: `User Action: ${action}`,
+      description: `User ID ${userId} has been ${action.toLowerCase()}.`,
+    });
+  };
+  
+  // Add missing handlers for transaction actions
+  const handleApproveTransaction = (transactionId: number) => {
+    toast({
+      title: "Transaction Approved",
+      description: `Transaction ID ${transactionId} has been approved.`,
+    });
+  };
+  
+  const handleRejectTransaction = (transactionId: number) => {
+    toast({
+      title: "Transaction Rejected",
+      description: `Transaction ID ${transactionId} has been rejected.`,
+    });
+  };
   
   useEffect(() => {
     const checkAuthentication = () => {
